@@ -21,7 +21,7 @@ Resolve relative dates (e.g. "next Monday", "tomorrow") against today's date.`;
 // Calls Claude to extract structured event data from a raw WhatsApp message.
 export async function parseEvent(messageText) {
   const response = await client.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 512,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: messageText }],
