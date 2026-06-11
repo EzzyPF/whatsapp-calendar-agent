@@ -20,7 +20,7 @@ function toDateTime(date, time) {
 export async function createEvent(eventData) {
   const calendar = getCalendarClient();
   const calendarId = process.env.GOOGLE_CALENDAR_ID || 'primary';
-  const timeZone = process.env.TIMEZONE || 'Asia/Dubai';
+  const timeZone = process.env.TIMEZONE || 'America/Toronto';
 
   const resource = {
     summary: eventData.title,
