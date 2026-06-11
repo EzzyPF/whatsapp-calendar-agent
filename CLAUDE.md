@@ -6,16 +6,19 @@ correct family member's Google Calendar → confirmation reply on WhatsApp.
 ## Stack
 Node.js + Express, JavaScript ESM only (no CommonJS). Twilio WhatsApp
 Sandbox intake, replies via TwiML XML. Anthropic API
-(claude-sonnet-4-20250514) for parsing. Google Calendar API via service
+(claude-sonnet-4-6) for parsing. Google Calendar API via service
 account (service-account.json, GCP project balmy-ocean-496921-m6).
 Senders filtered by ALLOWED_SENDER env var.
 
 ## Status
 - Done: scaffold (src/index.js, parseEvent.js, createEvent.js,
-  verify.js), Anthropic key, GCP/service account setup
-- Next: Step 4 Twilio Sandbox join → Step 5 local run with ngrok +
-  end-to-end test (ONE calendar only) → Step 6 person routing →
-  Step 7 deploy to Railway
+  verify.js), Anthropic key, GCP/service account setup, Twilio Sandbox
+  join, end-to-end verified (WhatsApp → parse → calendar event →
+  confirmation reply). Fixed during Step 5: GOOGLE_CALENDAR_ID was
+  "primary" (now ezzy@productfaculty.com), timezone was Asia/Dubai (now
+  America/Toronto), prompt now injects today's date.
+- Tunnel: VS Code devtunnels (not ngrok)
+- Next: Step 6 person routing → Step 7 deploy to Railway
 
 ## Design decisions (do not revisit without asking Ezzy)
 - Step 6 routing: Claude prompt extracts a "person" field; a name →
