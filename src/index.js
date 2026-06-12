@@ -1,8 +1,12 @@
 import 'dotenv/config';
 import express from 'express';
+import { createRequire } from 'module';
 import { verifyTwilio } from './verify.js';
 import { parseEvent } from './parseEvent.js';
 import { createEvent } from './createEvent.js';
+
+const require = createRequire(import.meta.url);
+const calendars = require('../calendars.json');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,6 +18,23 @@ app.use(express.urlencoded({ extended: false }));
 function twiml(message) {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <Response><Message>${message}</Message></Response>`;
+}
+
+// Format HH:MM (24-hour) as "3:30 PM".
+function fmt12(hhmm) {
+  const [h, m] = hhmm.split(':').map(Number);
+  const period = h >= 12 ? 'PM' : 'AM';
+  const hour = h % 12 || 12;
+  return m === 0 ? `${hour} ${period}` : `${hour}:${String(m).padStart(2, '0')} ${period}`;
+}
+
+// Build the confirmation reply, e.g. "✓ Added to Sikandar's calendar: Gym, Fri Jun 19, 3:30–4:30 PM"
+function buildReply(calendarLabel, parsed) {
+  const dateStr = new Date(`${parsed.date}T12:00:00`).toLocaleDateString('en-US', {
+    weekday: 'short', month: 'short', day: 'numeric', timeZone: 'America/Toronto',
+  });
+  const timeRange = `${fmt12(parsed.startTime)}–${fmt12(parsed.endTime)}`;
+  return `✓ Added to ${calendarLabel}: ${parsed.title}, ${dateStr}, ${timeRange}`;
 }
 
 // POST /webhook/whatsapp — entry point for all incoming WhatsApp messages.
@@ -29,19 +50,23 @@ app.post('/webhook/whatsapp', verifyTwilio, async (req, res) => {
   }
 
   try {
-    // Step 1: Ask Claude to extract event details from the raw message.
+    // Step 1: Ask Claude to extract event details (including person) from the raw message.
     const parsed = await parseEvent(messageText);
 
     if (parsed.error) {
       return res.send(twiml('No calendar event detected in your message.'));
     }
 
-    // Step 2: Create the event in Google Calendar.
-    await createEvent(parsed);
+    // Step 2: Route to the correct calendar based on the person field.
+    const person = parsed.person || null;
+    const calendarId = (person && calendars[person]) || calendars.default;
+    const calendarLabel = person ? `${person}'s calendar` : 'the General calendar';
+    const eventTitle = person ? `${person} - ${parsed.title}` : parsed.title;
 
-    return res.send(
-      twiml(`Event created: "${parsed.title}" on ${parsed.date} at ${parsed.startTime}.`)
-    );
+    // Step 3: Create the event on the routed calendar.
+    await createEvent({ ...parsed, title: eventTitle }, calendarId);
+
+    return res.send(twiml(buildReply(calendarLabel, parsed)));
   } catch (err) {
     console.error('Webhook error:', err);
     return res.send(twiml('Error processing your message. Please try again.'));

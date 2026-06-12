@@ -17,6 +17,9 @@ Required fields:
 - endTime (HH:MM, 24-hour) — if not mentioned, default to 1 hour after startTime
 - description (string or null)
 - location (string or null)
+- person (string or null) — who this event is for. Valid values: "Sikandar" or "Muriam".
+  Normalize variants: "Sikander" or any misspelling → "Sikandar"; "Murium", "Mariam", or any misspelling → "Muriam".
+  Return null if no person is mentioned.
 
 If the message does not describe a calendar event, return exactly:
 {"error":"no event found"}`;

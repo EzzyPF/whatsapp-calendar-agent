@@ -17,9 +17,10 @@ function toDateTime(date, time) {
 }
 
 // Creates a Google Calendar event from the structured data returned by parseEvent().
-export async function createEvent(eventData) {
+// calendarId overrides the env default and is supplied by the routing logic in index.js.
+export async function createEvent(eventData, calendarId) {
   const calendar = getCalendarClient();
-  const calendarId = process.env.GOOGLE_CALENDAR_ID || 'primary';
+  const resolvedCalendarId = calendarId || process.env.GOOGLE_CALENDAR_ID || 'primary';
   const timeZone = process.env.TIMEZONE || 'America/Toronto';
 
   const resource = {
@@ -36,7 +37,7 @@ export async function createEvent(eventData) {
     },
   };
 
-  const { data } = await calendar.events.insert({ calendarId, resource });
+  const { data } = await calendar.events.insert({ calendarId: resolvedCalendarId, resource });
 
   console.log(`Event created: ${data.htmlLink}`);
   return data;
