@@ -17,10 +17,12 @@ function toDateTime(date, time) {
 }
 
 // Creates a Google Calendar event from the structured data returned by parseEvent().
-// calendarId overrides the env default and is supplied by the routing logic in index.js.
+// calendarId must be supplied by the caller — no fallback, so a missing/wrong ID
+// surfaces immediately as an error rather than silently landing on the wrong calendar.
 export async function createEvent(eventData, calendarId) {
+  if (!calendarId) throw new Error('createEvent called without a calendarId');
+
   const calendar = getCalendarClient();
-  const resolvedCalendarId = calendarId || process.env.GOOGLE_CALENDAR_ID || 'primary';
   const timeZone = process.env.TIMEZONE || 'America/Toronto';
 
   const resource = {
@@ -37,7 +39,7 @@ export async function createEvent(eventData, calendarId) {
     },
   };
 
-  const { data } = await calendar.events.insert({ calendarId: resolvedCalendarId, resource });
+  const { data } = await calendar.events.insert({ calendarId, resource });
 
   console.log(`Event created: ${data.htmlLink}`);
   return data;
