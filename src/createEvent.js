@@ -2,8 +2,17 @@ import { google } from 'googleapis';
 
 // Builds a Google Calendar API client authenticated via a service account key file.
 function getCalendarClient() {
+  // Read service-account credentials from an env var (production) or fall back
+  // to the local file (development), so the app works both on Railway and locally.
+  let credentials;
+  if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
+    credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+  }
+
   const auth = new google.auth.GoogleAuth({
-    keyFile: process.env.GOOGLE_SERVICE_ACCOUNT_PATH || './service-account.json',
+    ...(credentials
+      ? { credentials }
+      : { keyFile: process.env.GOOGLE_SERVICE_ACCOUNT_PATH || './service-account.json' }),
     scopes: ['https://www.googleapis.com/auth/calendar'],
   });
   return google.calendar({ version: 'v3', auth });

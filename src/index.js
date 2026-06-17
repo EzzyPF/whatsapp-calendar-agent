@@ -6,7 +6,12 @@ import { parseEvent } from './parseEvent.js';
 import { createEvent } from './createEvent.js';
 
 const require = createRequire(import.meta.url);
-const calendars = require('../calendars.json');
+
+// Load the name→calendarID routing map from an env var (production) or the
+// local file (development), so it works on Railway and locally.
+const calendars = process.env.CALENDARS_JSON
+  ? JSON.parse(process.env.CALENDARS_JSON)
+  : require('../calendars.json');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
