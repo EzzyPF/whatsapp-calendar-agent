@@ -13,6 +13,12 @@ const calendars = process.env.CALENDARS_JSON
   ? JSON.parse(process.env.CALENDARS_JSON)
   : require('../calendars.json');
 
+// Build a lowercase-keyed version of the map so person lookups are
+// case-insensitive ("Abu", "abu", "ABU" all resolve the same).
+const calendarsLower = Object.fromEntries(
+  Object.entries(calendars).map(([name, id]) => [name.toLowerCase(), id])
+);
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -57,14 +63,15 @@ app.post('/webhook/whatsapp', verifyTwilio, async (req, res) => {
   try {
     // Step 1: Ask Claude to extract event details (including person) from the raw message.
     const parsed = await parseEvent(messageText);
-
     if (parsed.error) {
       return res.send(twiml('No calendar event detected in your message.'));
     }
 
     // Step 2: Route to the correct calendar based on the person field.
+    // Lookup is case-insensitive and tolerates stray spaces.
     const person = parsed.person || null;
-    const calendarId = (person && calendars[person]) || calendars.default;
+    const calendarId =
+      (person && calendarsLower[person.trim().toLowerCase()]) || calendars.default;
     const calendarLabel = person ? `${person}'s calendar` : 'the General calendar';
     const eventTitle = person ? `${person} - ${parsed.title}` : parsed.title;
 
