@@ -17,8 +17,14 @@ Required fields:
 - endTime (HH:MM, 24-hour) — if not mentioned, default to 1 hour after startTime
 - description (string or null)
 - location (string or null)
-- person (string or null) — who this event is for. Valid values: "Sikandar" or "Muriam".
-  Normalize variants: "Sikander" or any misspelling → "Sikandar"; "Murium", "Mariam", or any misspelling → "Muriam".
+- person (string or null) — who this event is for. Valid values (return EXACTLY one of these canonical spellings): "Sikandar", "Muriam", "Jawad", "Yusuf", "Ammar", "Hannah", "Rayyan", "Moharyar", "Bisma", "Nighat", "Sheheryar", "Ayesha".
+  Map nicknames and variants to the canonical name:
+  - "Sikander" or any misspelling → "Sikandar"
+  - "Murium", "Mariam", or any misspelling → "Muriam"
+  - "Moe" → "Moharyar"
+  - "Abu" → "Sheheryar"
+  - "Ami" → "Nighat"
+  If a message names a person not in this list, return null.
   Return null if no person is mentioned.
 
 If the message does not describe a calendar event, return exactly:
