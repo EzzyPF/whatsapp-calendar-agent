@@ -19,6 +19,12 @@ const calendarsLower = Object.fromEntries(
   Object.entries(calendars).map(([name, id]) => [name.toLowerCase(), id])
 );
 
+// Parse the comma-separated allow-list of WhatsApp senders once at startup.
+const allowedSenders = (process.env.ALLOWED_SENDER || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -55,8 +61,8 @@ app.post('/webhook/whatsapp', verifyTwilio, async (req, res) => {
   const sender = req.body.From;
   const messageText = req.body.Body;
 
-  // Only accept messages from the configured WhatsApp number.
-  if (sender !== process.env.ALLOWED_SENDER) {
+  // Only accept messages from a number on the allow-list.
+  if (!allowedSenders.includes(sender)) {
     return res.send(twiml('Unauthorized sender.'));
   }
 
